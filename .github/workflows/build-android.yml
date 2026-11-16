@@ -24,7 +24,11 @@ jobs:
           set -euo pipefail
           base64 --decode .bootstrap/nexora-source.tar.gz.b64 > "$RUNNER_TEMP/nexora-source.tar.gz"
           tar -xzf "$RUNNER_TEMP/nexora-source.tar.gz" -C "$RUNNER_TEMP"
+          # Keep the packaged source in sync with the Kotlin 2.4 compilerOptions DSL.
+          install -m 0644 .bootstrap/app-build.gradle.kts "$RUNNER_TEMP/NexoraAICamera/app/build.gradle.kts"
           test -f "$RUNNER_TEMP/NexoraAICamera/app/build.gradle.kts"
+          grep -q 'compilerOptions' "$RUNNER_TEMP/NexoraAICamera/app/build.gradle.kts"
+          ! grep -q 'kotlinOptions' "$RUNNER_TEMP/NexoraAICamera/app/build.gradle.kts"
 
       - name: Set up Java 17
         uses: actions/setup-java@v4
