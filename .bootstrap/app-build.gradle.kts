@@ -51,7 +51,9 @@ kotlin {
 }
 
 dependencies {
-    val composeBom = platform("androidx.compose:compose-bom:2026.09.00")
+    // Compose 1.12 requires AGP 9.1 and compileSdk 37.
+    // Keep this app on the Compose 2026.08 BOM to match AGP 8.13.2 / SDK 36.
+    val composeBom = platform("androidx.compose:compose-bom:2026.08.00")
     implementation(composeBom)
     androidTestImplementation(composeBom)
 
