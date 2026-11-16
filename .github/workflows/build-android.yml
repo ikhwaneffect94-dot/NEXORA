@@ -25,15 +25,15 @@ jobs:
           base64 --decode .bootstrap/nexora-source.tar.gz.b64 > "$RUNNER_TEMP/nexora-source.tar.gz"
           tar -xzf "$RUNNER_TEMP/nexora-source.tar.gz" -C "$RUNNER_TEMP"
 
-          # Use the maintained Kotlin compilerOptions DSL and Compose BOM.
+          # Use the current Kotlin compilerOptions, Compose BOM and app version.
           install -m 0644 .bootstrap/app-build.gradle.kts "$RUNNER_TEMP/NexoraAICamera/app/build.gradle.kts"
-
-          # Google Media Enhancement beta10 requires its cancellation callback too.
-          python3 .bootstrap/patch-photo-enhancer.py "$RUNNER_TEMP/NexoraAICamera/app/src/main/java/com/nexora/aicamera/ai/PhotoEnhancer.kt"
+          install -m 0644 .bootstrap/PhotoEnhancer.kt "$RUNNER_TEMP/NexoraAICamera/app/src/main/java/com/nexora/aicamera/ai/PhotoEnhancer.kt"
 
           test -f "$RUNNER_TEMP/NexoraAICamera/app/build.gradle.kts"
+          grep -q 'versionCode = 2' "$RUNNER_TEMP/NexoraAICamera/app/build.gradle.kts"
           grep -q 'compilerOptions' "$RUNNER_TEMP/NexoraAICamera/app/build.gradle.kts"
           ! grep -q 'kotlinOptions' "$RUNNER_TEMP/NexoraAICamera/app/build.gradle.kts"
+          grep -q 'noiseThreshold' "$RUNNER_TEMP/NexoraAICamera/app/src/main/java/com/nexora/aicamera/ai/PhotoEnhancer.kt"
           grep -q 'onCancelled(statusCode: Int)' "$RUNNER_TEMP/NexoraAICamera/app/src/main/java/com/nexora/aicamera/ai/PhotoEnhancer.kt"
 
       - name: Set up Java 17
