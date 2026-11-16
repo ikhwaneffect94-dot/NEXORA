@@ -1,0 +1,69 @@
+name: Build NEXORA AI CAMERA APK
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-apk:
+    name: Compile and test Android app
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Prepare Android source
+        shell: bash
+        run: |
+          set -euo pipefail
+          base64 --decode .bootstrap/nexora-source.tar.gz.b64 > "$RUNNER_TEMP/nexora-source.tar.gz"
+          tar -xzf "$RUNNER_TEMP/nexora-source.tar.gz" -C "$RUNNER_TEMP"
+          test -f "$RUNNER_TEMP/NexoraAICamera/app/build.gradle.kts"
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android SDK 36
+        run: |
+          yes | sdkmanager --licenses
+          sdkmanager --install "platform-tools" "platforms;android-36" "build-tools;36.0.0"
+
+      - name: Set up Gradle 8.13
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.13'
+
+      - name: Build APK and run unit tests
+        working-directory: ${{ runner.temp }}/NexoraAICamera
+        run: gradle --no-daemon --stacktrace :app:assembleDebug :app:testDebugUnitTest
+
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: NexoraAICamera-debug-apk
+          path: ${{ runner.temp }}/NexoraAICamera/app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload reports if build fails
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: NexoraAICamera-build-reports
+          path: |
+            ${{ runner.temp }}/NexoraAICamera/app/build/reports/
+            ${{ runner.temp }}/NexoraAICamera/app/build/outputs/logs/
+          if-no-files-found: ignore
+          retention-days: 7
