@@ -16,7 +16,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Prepare Android source
         shell: bash
@@ -24,19 +24,24 @@ jobs:
           set -euo pipefail
           base64 --decode .bootstrap/nexora-source.tar.gz.b64 > "$RUNNER_TEMP/nexora-source.tar.gz"
           tar -xzf "$RUNNER_TEMP/nexora-source.tar.gz" -C "$RUNNER_TEMP"
-          # Keep the packaged source in sync with the Kotlin 2.4 compilerOptions DSL.
+
+          # Use the maintained Kotlin compilerOptions DSL and Compose BOM.
           install -m 0644 .bootstrap/app-build.gradle.kts "$RUNNER_TEMP/NexoraAICamera/app/build.gradle.kts"
+
+          # Google Media Enhancement beta10 requires its cancellation callback too.
+          python3 .bootstrap/patch-photo-enhancer.py "$RUNNER_TEMP/NexoraAICamera/app/src/main/java/com/nexora/aicamera/ai/PhotoEnhancer.kt"
+
           test -f "$RUNNER_TEMP/NexoraAICamera/app/build.gradle.kts"
           grep -q 'compilerOptions' "$RUNNER_TEMP/NexoraAICamera/app/build.gradle.kts"
           ! grep -q 'kotlinOptions' "$RUNNER_TEMP/NexoraAICamera/app/build.gradle.kts"
+          grep -q 'onCancelled(statusCode: Int)' "$RUNNER_TEMP/NexoraAICamera/app/src/main/java/com/nexora/aicamera/ai/PhotoEnhancer.kt"
 
       - name: Set up Java 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: '17'
 
-      # v4 no longer requests Google's removed legacy "tools" SDK package.
       - name: Set up Android SDK
         uses: android-actions/setup-android@v4
         with:
@@ -49,17 +54,17 @@ jobs:
           set -euo pipefail
           sdkmanager --install "platforms;android-36" "build-tools;36.0.0"
 
-      - name: Set up Gradle 8.13
-        uses: gradle/actions/setup-gradle@v4
+      - name: Set up Gradle 8.14.6
+        uses: gradle/actions/setup-gradle@v6
         with:
-          gradle-version: '8.13'
+          gradle-version: '8.14.6'
 
       - name: Build APK and run unit tests
         working-directory: ${{ runner.temp }}/NexoraAICamera
         run: gradle --no-daemon --stacktrace :app:assembleDebug :app:testDebugUnitTest
 
       - name: Upload debug APK
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: NexoraAICamera-debug-apk
           path: ${{ runner.temp }}/NexoraAICamera/app/build/outputs/apk/debug/*.apk
@@ -68,7 +73,7 @@ jobs:
 
       - name: Upload reports if build fails
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: NexoraAICamera-build-reports
           path: |
