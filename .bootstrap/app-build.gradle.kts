@@ -12,8 +12,8 @@ android {
         applicationId = "com.nexora.aicamera"
         minSdk = 29
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = 2
+        versionName = "1.1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -51,8 +51,6 @@ kotlin {
 }
 
 dependencies {
-    // Compose 1.12 requires AGP 9.1 and compileSdk 37.
-    // Keep this app on the Compose 2026.06.01 BOM to match AGP 8.13.2 / SDK 36.
     val composeBom = platform("androidx.compose:compose-bom:2026.06.01")
     implementation(composeBom)
     androidTestImplementation(composeBom)
@@ -78,7 +76,6 @@ dependencies {
     implementation("com.google.android.gms:play-services-media-effect-enhancement:16.0.0-beta10")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.10.2")
-
     implementation("androidx.exifinterface:exifinterface:1.4.1")
 
     testImplementation("junit:junit:4.13.2")
